@@ -30,9 +30,33 @@ const translations: Record<Language, Record<string, string>> = {
     deactivateSheath: "DEACTIVATE SHEATH",
     defaultPinMsg: "DEFAULT SYSTEM RECOVERY PIN: 0000 OR 1337",
 
+    // Sidebar Categories (ProBot Style)
+    catGeneralMenu: "GENERAL",
+    catModerationMenu: "MODERATION",
+    catModuleSettingsMenu: "MODULE SETTINGS",
+
     // Nav Items
-    navCommandCenter: "Command Center",
-    navDiscordSettings: "Discord Settings",
+    navCommandCenter: "Overview",
+    navDiscordSettings: "Server Settings",
+    navBotCommands: "Bot Commands",
+    navGetPremium: "Get Premium",
+    navModeration: "Moderation",
+    navLogs: "Logs",
+    navAutomod: "Automod",
+    navAntiRaid: "Anti-Raid",
+    navVipProtection: "VIP Protection",
+    navUtility: "Utility",
+    navWelcomeGoodbye: "Welcome & Goodbye",
+    navAutoResponder: "Auto Responder",
+    navLevelingSystem: "Leveling System",
+    navAutoRoles: "Auto Roles",
+    navColors: "Colors",
+    navSelfAssignableRoles: "Self-Assignable Roles",
+    navStarboard: "Starboard",
+    navTemporaryChannels: "Temporary Channels",
+    navTempLink: "Temp Link",
+    navStatistics: "Statistics",
+    navTickets: "Tickets",
     navAiAssistant: "AI Core Assistant",
     navAuditLogs: "Audit Logs",
 
@@ -132,7 +156,26 @@ const translations: Record<Language, Record<string, string>> = {
     sevCritical: "Critical Threats",
     sevHigh: "High Severity",
     sevMedium: "Medium Severity",
-    sevLow: "Low Log"
+    sevLow: "Low Log",
+
+    // Bot Commands Settings
+    commandsTitle: "BOT COMMANDS CONFIGURATION",
+    commandsSub: "Toggle bot commands, set authorized execution roles, and customize prefix triggers",
+    prefixLabel: "Command Prefix Trigger",
+    prefixPlaceholder: "e.g. !",
+    commandNameHeader: "Command Name / Description",
+    authorizedRolesHeader: "Authorized Roles",
+    disallowedChannelsHeader: "Disallowed Channels",
+    saveConfig: "SAVE CHANGES",
+    configSaved: "COMMAND CONFIGURATIONS SAVED SUCCESSFULLY",
+    enabled: "Enabled",
+    disabled: "Disabled",
+    cmdBanDesc: "Bans members from the server and wipes their recent messages.",
+    cmdMuteDesc: "Mutes/Timeouts members in voice & text channels.",
+    cmdKickDesc: "Kicks a member from the server.",
+    cmdWarnDesc: "Issues an official warning and tracks infraction counts.",
+    cmdClearDesc: "Deletes a specified number of recent messages in a channel.",
+    cmdLockDesc: "Locks down a channel to prevent everyone from sending messages."
   },
   ar: {
     // Sidebar & Shell
@@ -153,9 +196,33 @@ const translations: Record<Language, Record<string, string>> = {
     deactivateSheath: "إلغاء التجميد الأمني",
     defaultPinMsg: "رمز الاستعادة الافتراضي: 0000 أو 1337",
 
+    // Sidebar Categories (ProBot Style)
+    catGeneralMenu: "عام",
+    catModerationMenu: "الإشراف والرقابة",
+    catModuleSettingsMenu: "إعدادات الموديلات",
+
     // Nav Items
-    navCommandCenter: "مركز التحكم",
-    navDiscordSettings: "إعدادات ديسكورد",
+    navCommandCenter: "نظرة عامة",
+    navDiscordSettings: "إعدادات السيرفر",
+    navBotCommands: "أوامر البوت",
+    navGetPremium: "احصل على بريميوم",
+    navModeration: "الإشراف",
+    navLogs: "السجلات",
+    navAutomod: "المنظّم التلقائي",
+    navAntiRaid: "حماية الغارات",
+    navVipProtection: "حماية الـ VIP",
+    navUtility: "المرافق العامة",
+    navWelcomeGoodbye: "الترحيب والمغادرة",
+    navAutoResponder: "الرد التلقائي",
+    navLevelingSystem: "نظام اللفل",
+    navAutoRoles: "الرتب التلقائية",
+    navColors: "الألوان",
+    navSelfAssignableRoles: "الرتب الذاتية",
+    navStarboard: "ستاربورد",
+    navTemporaryChannels: "الروم المؤقتة",
+    navTempLink: "رابط مؤقت",
+    navStatistics: "الإحصائيات",
+    navTickets: "التذاكر",
     navAiAssistant: "المساعد الأمني الذكي",
     navAuditLogs: "سجل العمليات",
 
@@ -255,7 +322,26 @@ const translations: Record<Language, Record<string, string>> = {
     sevCritical: "تهديدات حرجة جداً",
     sevHigh: "خطورة عالية",
     sevMedium: "خطورة متوسطة",
-    sevLow: "سجل عادي"
+    sevLow: "سجل عادي",
+
+    // Bot Commands Settings
+    commandsTitle: "تكوين أوامر البوت",
+    commandsSub: "تفعيل أوامر البوت، وتحديد رتب التشغيل المصرح لها، وتعديل بادئة التفعيل",
+    prefixLabel: "بادئة تفعيل الأوامر (Prefix)",
+    prefixPlaceholder: "مثال: !",
+    commandNameHeader: "اسم الأمر / الوصف",
+    authorizedRolesHeader: "الرتب المصرح لها",
+    disallowedChannelsHeader: "القنوات المحظورة",
+    saveConfig: "حفظ التعديلات",
+    configSaved: "تم حفظ إعدادات الأوامر بنجاح",
+    enabled: "مفعل",
+    disabled: "معطل",
+    cmdBanDesc: "حظر الأعضاء المخربين من الخادم ومسح رسائلهم الأخيرة.",
+    cmdMuteDesc: "كتم أو إسكات الأعضاء مؤقتاً في الروم الصوتية والكتابية.",
+    cmdKickDesc: "طرد العضو المريب من الخادم.",
+    cmdWarnDesc: "إصدار تحذير إداري رسمي للعضو وتتبع المخالفات.",
+    cmdClearDesc: "مسح عدد معين من الرسائل الأخيرة في قنوات الشات.",
+    cmdLockDesc: "إغلاق الروم تماماً لمنع الأعضاء العاديين من إرسال الرسائل."
   }
 };
 
@@ -277,7 +363,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLangState(newLang);
     if (typeof window !== "undefined") {
       localStorage.setItem("system-lang", newLang);
-      // Dispatch storage event to notify other tabs/components
       window.dispatchEvent(new Event("storage"));
     }
   };
