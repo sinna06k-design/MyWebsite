@@ -4,24 +4,37 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, BrainCircuit, User, Terminal, Cpu, FileWarning, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { askAI } from "@/app/actions";
+import { useLanguage } from "@/lib/language-context";
 
 interface ChatMessage {
   role: "user" | "system";
   content: string;
 }
 
-const initialMessages: ChatMessage[] = [
-  { 
-    role: "system", 
-    content: "### Welcome to SecurityBot System X AI Core.\n\nI have complete access to cluster gateways, active port stats, and Discord moderation matrices.\n\nYou can ask me to **audit the firewall rules**, **analyze spam threat logs**, or **inspect credential databases**." 
-  }
-];
-
 export default function AIAssistant() {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const { lang, t } = useLanguage();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (lang === "ar") {
+      setMessages([
+        { 
+          role: "system", 
+          content: "### مرحباً بك في مركز الذكاء الاصطناعي الأمني لـ SecurityBot System X.\n\nلدي اتصال كامل ببوابات السيرفر الفعالة، ومقاييس قنوات الاتصال، ومصفوفة الحماية والتوثيق.\n\nيمكنك أن تطلب مني **فحص جدار الحماية**، أو **تحليل سجلات التهديدات للسبام**، أو **التحقق من حماية رتب المشرفين**." 
+        }
+      ]);
+    } else {
+      setMessages([
+        { 
+          role: "system", 
+          content: "### Welcome to SecurityBot System X AI Core.\n\nI have complete access to cluster gateways, active port stats, and Discord moderation matrices.\n\nYou can ask me to **audit the firewall rules**, **analyze spam threat logs**, or **inspect credential databases**." 
+        }
+      ]);
+    }
+  }, [lang]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,7 +49,6 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      // Map message history to format expected by server action
       const history = messages.map(m => ({
         role: m.role,
         content: m.content
@@ -45,10 +57,17 @@ export default function AIAssistant() {
       const response = await askAI(text, history);
       setMessages(prev => [...prev, { role: "system", content: response }]);
     } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: "system", 
-        content: "### 🚨 Connection Interrupted\n\nAI Core handshake timed out. Check API server state or configuration keys." 
-      }]);
+      if (lang === "ar") {
+        setMessages(prev => [...prev, { 
+          role: "system", 
+          content: "### 🚨 انقطع الاتصال\n\nفشل الاتصال مع الذكاء الاصطناعي المباشر. يرجى التحقق من مفاتيح واجهة برمجة التطبيقات API الخاصة بك." 
+        }]);
+      } else {
+        setMessages(prev => [...prev, { 
+          role: "system", 
+          content: "### 🚨 Connection Interrupted\n\nAI Core handshake timed out. Check API server state or configuration keys." 
+        }]);
+      }
     } finally {
       setLoading(false);
     }
@@ -64,45 +83,45 @@ export default function AIAssistant() {
       <div>
         <h1 className="text-2xl font-bold text-white font-mono tracking-wider flex items-center gap-2">
           <BrainCircuit className="h-6 w-6 text-pink-400 text-glow-purple" />
-          <span>AI SECURITY CORE ASSISTANT</span>
+          <span>{t("aiAssistantTitle")}</span>
         </h1>
-        <p className="text-xs text-gray-400 font-mono uppercase tracking-widest">Command AI Core to conduct diagnostics audits and audit risk thresholds</p>
+        <p className="text-xs text-gray-400 font-mono uppercase tracking-widest">{t("aiAssistantSub")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
         {/* Suggested Actions left sidebar */}
         <div className="space-y-4 lg:col-span-1">
-          <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest px-1">Suggested Diagnostic Core Tasks</p>
+          <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest px-1">{t("suggestedTasks")}</p>
           
           <button
-            onClick={() => handleSuggest("Run server diagnostics audit on Discord configurations")}
+            onClick={() => handleSuggest(lang === "ar" ? "قم بإجراء فحص أمني على إعدادات الديسكورد" : "Run server diagnostics audit on Discord configurations")}
             className="w-full text-left p-3.5 rounded-xl border border-white/5 bg-black/40 hover:border-cyber-blue/30 text-xs font-mono text-gray-300 hover:text-white transition-all space-y-1 block cursor-pointer"
           >
             <div className="flex items-center gap-1.5 text-cyber-blue font-bold">
-              <Cpu className="h-4 w-4" /> Run Server Audit
+              <Cpu className="h-4 w-4" /> {t("runAuditTitle")}
             </div>
-            <p className="text-[10px] text-gray-500 font-sans leading-normal">Scans active roles, invites, permissions structures.</p>
+            <p className="text-[10px] text-gray-500 font-sans leading-normal">{t("runAuditDesc")}</p>
           </button>
 
           <button
-            onClick={() => handleSuggest("Check active database for leaked operator credentials or dark web leaks")}
+            onClick={() => handleSuggest(lang === "ar" ? "فحص قاعدة البيانات بحثاً عن تسريبات لمعلومات المشغلين" : "Check active database for leaked operator credentials or dark web leaks")}
             className="w-full text-left p-3.5 rounded-xl border border-white/5 bg-black/40 hover:border-cyber-purple/30 text-xs font-mono text-gray-300 hover:text-white transition-all space-y-1 block cursor-pointer"
           >
             <div className="flex items-center gap-1.5 text-cyber-purple font-bold">
-              <ShieldAlert className="h-4 w-4" /> Leak Database Scan
+              <ShieldAlert className="h-4 w-4" /> {t("leakScanTitle")}
             </div>
-            <p className="text-[10px] text-gray-500 font-sans leading-normal">Checks credentials against compromised databases.</p>
+            <p className="text-[10px] text-gray-500 font-sans leading-normal">{t("leakScanDesc")}</p>
           </button>
 
           <button
-            onClick={() => handleSuggest("Generate zero-day risk mitigations guidelines for anti-spam filters")}
+            onClick={() => handleSuggest(lang === "ar" ? "إنشاء إرشادات للوقاية من الغارات والسبام في السيرفر" : "Generate zero-day risk mitigations guidelines for anti-spam filters")}
             className="w-full text-left p-3.5 rounded-xl border border-white/5 bg-black/40 hover:border-pink-500/30 text-xs font-mono text-gray-300 hover:text-white transition-all space-y-1 block cursor-pointer"
           >
             <div className="flex items-center gap-1.5 text-pink-400 font-bold">
-              <FileWarning className="h-4 w-4" /> Mitigation Guidelines
+              <FileWarning className="h-4 w-4" /> {t("mitigationTitle")}
             </div>
-            <p className="text-[10px] text-gray-500 font-sans leading-normal">Drafts rules presets for link filtering configurations.</p>
+            <p className="text-[10px] text-gray-500 font-sans leading-normal">{t("mitigationDesc")}</p>
           </button>
         </div>
 
@@ -125,8 +144,7 @@ export default function AIAssistant() {
                   {m.role === "user" ? <User className="h-4.5 w-4.5" /> : <BrainCircuit className="h-4.5 w-4.5" />}
                 </div>
 
-                <div className="flex-1 min-w-0 prose prose-invert prose-xs text-xs text-gray-300 space-y-2 leading-relaxed">
-                  {/* Clean parser helper for visual simulation logs */}
+                <div className="flex-1 min-w-0 prose prose-invert prose-xs text-xs text-gray-300 space-y-2 leading-relaxed text-left">
                   {m.content.split("\n\n").map((para, pidx) => {
                     if (para.startsWith("###")) {
                       return <h4 key={pidx} className="font-bold text-white font-mono text-xs uppercase tracking-wider">{para.replace("###", "").trim()}</h4>;
@@ -155,7 +173,7 @@ export default function AIAssistant() {
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: "150ms" }} />
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-                  <span>AI core analyzing telemetry data...</span>
+                  <span>{t("aiCoreAnalyzing")}</span>
                 </div>
               </div>
             )}
@@ -174,7 +192,7 @@ export default function AIAssistant() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask the AI Security Core to perform audits..."
+              placeholder={t("aiPlaceholder")}
               className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-white"
             />
             <button

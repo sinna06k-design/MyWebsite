@@ -26,22 +26,24 @@ interface DiscordServer {
   active: boolean;
 }
 
-const mainNavItems: SidebarItem[] = [
-  { name: "Command Center", href: "/dashboard", icon: Shield, color: "text-cyber-blue" },
-  { name: "SecurityBot OS", href: "/dashboard/system-os", icon: Terminal, color: "text-cyber-indigo" },
-  { name: "Discord Management", href: "/dashboard/discord", icon: MessageSquare, color: "text-cyber-blue" },
-  { name: "Advanced Shield", href: "/dashboard/security-center", icon: Sliders, color: "text-cyber-purple", badge: "Core" },
-  { name: "AI Security Assistant", href: "/dashboard/ai-assistant", icon: BrainCircuit, color: "text-pink-400" },
-  { name: "Audit Log Center", href: "/dashboard/audit-logs", icon: FileCode, color: "text-gray-400" },
-  { name: "Analytics Center", href: "/dashboard/analytics", icon: Activity, color: "text-cyber-green" },
-  { name: "Developer Console", href: "/dashboard/developer", icon: Code, color: "text-amber-400" },
-];
+import { LanguageProvider, useLanguage } from "@/lib/language-context";
 
-const secretNavItems: SidebarItem[] = [
-  { name: "Global Threat Map", href: "/dashboard/cyber-map", icon: Globe, color: "text-red-400", badge: "Live" },
-  { name: "Anomaly Radar", href: "/dashboard/radar", icon: Radio, color: "text-cyber-green" },
-  { name: "Dark Web Monitor", href: "/dashboard/dark-web", icon: EyeOff, color: "text-orange-500", badge: "Leak" },
-];
+interface SidebarItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  badge?: string;
+  color: string;
+}
+
+interface DiscordServer {
+  id: string;
+  name: string;
+  icon: string;
+  members: number;
+  active: boolean;
+  role?: string;
+}
 
 const mockServers: DiscordServer[] = [
   { id: "srv-1", name: "Nexus Esports", icon: "NE", members: 12891, active: true },
@@ -49,24 +51,38 @@ const mockServers: DiscordServer[] = [
   { id: "srv-4", name: "Global Elite Club", icon: "GE", members: 8920, active: true }
 ];
 
-export default function DashboardShell({ children }: { children: React.ReactNode }) {
+function DashboardShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, setLang, t } = useLanguage();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lockdownActive, setLockdownActive] = useState(false);
   const [passcode, setPasscode] = useState("");
   const [passcodeError, setPasscodeError] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [systemAlerts, setSystemAlerts] = useState<string[]>([
-    "Anti-Raid triggered: 47 spam logs blocked",
-    "SQL injection attempt blocked from IP 198.51.100.12",
-    "Dark Web Leak detected: admin credentials compromise alert"
-  ]);
+  const [systemAlerts, setSystemAlerts] = useState<string[]>([]);
 
   // Read active server from query param or local storage
   const [servers, setServers] = useState<DiscordServer[]>(mockServers);
   const [activeServer, setActiveServer] = useState<DiscordServer>(mockServers[0]);
+
+  // Set system alerts translated
+  useEffect(() => {
+    if (lang === "ar") {
+      setSystemAlerts([
+        "تم تشغيل نظام منع المداهمة: تم حظر 47 سجل سبام",
+        "محاولة حقن SQL تم حظرها من عنوان IP 198.51.100.12",
+        "تسريب في الإنترنت المظلم: تنبيه اختراق بيانات اعتماد الإدارة"
+      ]);
+    } else {
+      setSystemAlerts([
+        "Anti-Raid triggered: 47 spam logs blocked",
+        "SQL injection attempt blocked from IP 198.51.100.12",
+        "Dark Web Leak detected: admin credentials compromise alert"
+      ]);
+    }
+  }, [lang]);
 
   useEffect(() => {
     const isLocked = localStorage.getItem("system-lockdown") === "true";
@@ -99,7 +115,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const handleServerSwitch = (server: DiscordServer) => {
     setActiveServer(server);
-    // Persist parameter in navigation
     router.push(`${pathname}?server=${server.id}`);
   };
 
@@ -122,18 +137,29 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   };
 
+  const mainNavItems: SidebarItem[] = [
+    { name: t("navCommandCenter"), href: "/dashboard", icon: Shield, color: "text-cyber-blue" },
+    { name: t("navDiscordSettings"), href: "/dashboard/discord", icon: MessageSquare, color: "text-cyber-blue" },
+    { name: t("navAiAssistant"), href: "/dashboard/ai-assistant", icon: BrainCircuit, color: "text-pink-400" },
+    { name: t("navAuditLogs"), href: "/dashboard/audit-logs", icon: FileCode, color: "text-gray-400" },
+  ];
+
+  const dirAttr = lang === "ar" ? "rtl" : "ltr";
+
   return (
-    <div className="relative min-h-screen bg-cyber-bg text-gray-200 flex flex-col md:flex-row overflow-hidden font-sans">
+    <div dir={dirAttr} className="relative min-h-screen bg-cyber-bg text-gray-200 flex flex-col md:flex-row overflow-hidden font-sans">
       
       {/* BACKGROUND GRID */}
       <div className="absolute inset-0 cyber-grid-bg opacity-15 pointer-events-none" />
       
       {/* DUAL SIDEBAR SYSTEM */}
       <aside className={`fixed md:sticky top-0 z-40 h-screen w-80 glass-panel border-r border-white/5 flex transition-transform duration-300 ${
-        mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      }`}>
+        lang === "ar" 
+          ? mobileMenuOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+          : mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      } ${lang === "ar" ? "right-0 md:left-auto" : "left-0"}`}>
         
-        {/* COLUMN 1: DISCORD GUILD BUBBLE BAR (Extreme Left) */}
+        {/* COLUMN 1: DISCORD GUILD BUBBLE BAR (Extreme Left/Right) */}
         <div className="w-16 md:w-18 bg-[#04060a] border-r border-white/5 flex flex-col items-center py-6 gap-4 select-none shrink-0">
           {/* System Home Hub */}
           <Link 
@@ -141,8 +167,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             className="relative p-2.5 rounded-xl bg-cyan-950/40 border border-cyber-blue/30 text-cyber-blue hover:text-white hover:border-white transition-all shadow-[0_0_10px_rgba(6,182,212,0.1)] group cursor-pointer"
           >
             <Cpu className="h-5 w-5" />
-            <span className="absolute left-full ml-3 px-2 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-              HUB CONSOLE
+            <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} px-2 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50`}>
+              {t("hubConsole")}
             </span>
           </Link>
 
@@ -155,8 +181,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               return (
                 <div key={server.id} className="relative group w-full flex justify-center">
                   
-                  {/* Left Indicator Pill (Discord style!) */}
-                  <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-cyber-blue rounded-r transition-all duration-300 ${
+                  {/* Indicator Pill */}
+                  <span className={`absolute ${lang === "ar" ? "right-0" : "left-0"} top-1/2 -translate-y-1/2 w-1 bg-cyber-blue rounded transition-all duration-300 ${
                     isSelected ? "h-8" : "h-0 group-hover:h-3"
                   }`} />
                   
@@ -177,7 +203,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   </button>
 
                   {/* Server Tooltip */}
-                  <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
+                  <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl`}>
                     {server.name}
                   </span>
                 </div>
@@ -190,8 +216,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               className="h-11 w-11 rounded-full hover:rounded-xl bg-white/5 border border-white/5 hover:border-cyber-purple/40 hover:bg-purple-950/15 text-gray-400 hover:text-cyber-purple flex items-center justify-center transition-all group cursor-pointer"
             >
               <Plus className="h-5 w-5" />
-              <span className="absolute left-full ml-3 px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                ADD BOT SERVER
+              <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50`}>
+                {t("addBotServer")}
               </span>
             </Link>
           </div>
@@ -204,14 +230,16 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           
           {/* Active Server Badge Header */}
           <div className="p-4 border-b border-white/5 bg-black/20 flex flex-col justify-center min-h-[72px]">
-            <p className="text-[10px] text-cyber-blue font-mono font-bold tracking-wider uppercase">ACTIVE NODE</p>
+            <p className="text-[10px] text-cyber-blue font-mono font-bold tracking-wider uppercase">{t("activeNode")}</p>
             <h2 className="font-bold text-sm text-white truncate font-mono">{activeServer.name}</h2>
           </div>
 
           {/* Navigation link elements */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-6">
             <div>
-              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 font-mono">Server Control</div>
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 font-mono">
+                {lang === "ar" ? "إعدادات الحماية" : "Server Control"}
+              </div>
               <ul className="space-y-1">
                 {mainNavItems.map((item) => {
                   const querySuffix = `?server=${activeServer.id}`;
@@ -242,39 +270,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 })}
               </ul>
             </div>
-
-            <div>
-              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 font-mono">Holographic Intel</div>
-              <ul className="space-y-1">
-                {secretNavItems.map((item) => {
-                  const querySuffix = `?server=${activeServer.id}`;
-                  const isActive = pathname === item.href;
-                  return (
-                    <li key={item.name}>
-                      <Link
-                        href={`${item.href}${querySuffix}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all duration-200 group ${
-                          isActive 
-                            ? "bg-purple-950/30 border border-cyber-purple/30 text-white font-medium" 
-                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? "text-cyber-purple text-glow-purple" : item.color}`} />
-                          <span className="truncate">{item.name}</span>
-                        </div>
-                        {item.badge && (
-                          <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
           </nav>
 
           {/* User badge */}
@@ -285,7 +280,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-white truncate">Operator#0001</p>
-                <p className="text-[9px] text-gray-500">LEVEL: HIGH-CLEARANCE</p>
+                <p className="text-[9px] text-gray-500">{t("operatorLevel")}</p>
               </div>
             </div>
           </div>
@@ -301,14 +296,20 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
         <div className="flex items-center gap-3">
           <button 
+            onClick={() => setLang(lang === "en" ? "ar" : "en")}
+            className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-950/20 text-cyber-blue text-[10px] font-mono cursor-pointer"
+          >
+            {lang === "en" ? "AR" : "EN"}
+          </button>
+          <button 
             onClick={handleLockdown}
-            className="p-1.5 rounded-lg border border-red-500/30 bg-red-950/20 text-red-500 animate-pulse"
+            className="p-1.5 rounded-lg border border-red-500/30 bg-red-950/20 text-red-500 animate-pulse cursor-pointer"
           >
             <Lock className="h-4 w-4" />
           </button>
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg border border-white/10 text-white"
+            className="p-1.5 rounded-lg border border-white/10 text-white cursor-pointer"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -316,23 +317,31 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </header>
 
       {/* MAIN VIEWPORT */}
-      <div className="flex-1 flex flex-col min-h-screen relative z-10 overflow-x-hidden">
+      <div className={`flex-1 flex flex-col min-h-screen relative z-10 overflow-x-hidden ${lang === "ar" ? "md:mr-80" : "md:ml-0"}`}>
         
         {/* DESKTOP HEADER */}
         <header className="hidden md:flex h-16 border-b border-white/5 bg-black/25 backdrop-blur-md px-8 items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 bg-emerald-950/25 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] text-emerald-400 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span className="uppercase">{activeServer.name} SHIELD: ACTIVE</span>
+              <span className="uppercase">{activeServer.name} {t("shieldActive")}</span>
             </div>
             
             <div className="flex items-center gap-2 bg-cyan-950/25 border border-cyan-500/20 px-3 py-1 rounded-full text-[10px] text-cyber-blue font-mono">
               <RadioTower className="h-3 w-3 animate-pulse" />
-              <span>PING: 2ms</span>
+              <span>{t("ping")}: 2ms</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Language Switcher */}
+            <button
+              onClick={() => setLang(lang === "en" ? "ar" : "en")}
+              className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/25 text-cyber-blue hover:text-white font-mono text-xs tracking-wider transition-all cursor-pointer hover:bg-cyan-950/40"
+            >
+              {lang === "en" ? "العربية" : "ENGLISH"}
+            </button>
+
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -352,23 +361,23 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-80 glass-panel border border-white/10 rounded-xl shadow-2xl p-4 z-50 space-y-3"
+                      className={`absolute ${lang === "ar" ? "left-0" : "right-0"} mt-2 w-80 glass-panel border border-white/10 rounded-xl shadow-2xl p-4 z-50 space-y-3`}
                     >
                       <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                        <span className="text-xs font-bold font-mono tracking-wider text-white">SYSTEM EVENTS ({systemAlerts.length})</span>
+                        <span className="text-xs font-bold font-mono tracking-wider text-white">{t("systemEvents")} ({systemAlerts.length})</span>
                         <button 
                           onClick={() => setSystemAlerts([])}
                           className="text-[10px] text-cyan-400 hover:underline cursor-pointer"
                         >
-                          Clear All
+                          {t("clearAll")}
                         </button>
                       </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                         {systemAlerts.length === 0 ? (
-                          <p className="text-xs text-gray-500 text-center py-4">No critical reports for {activeServer.name}.</p>
+                          <p className="text-xs text-gray-500 text-center py-4">{t("noEvents")} {activeServer.name}.</p>
                         ) : (
                           systemAlerts.map((alert, idx) => (
-                            <div key={idx} className="p-2.5 rounded bg-white/5 border-l-2 border-cyber-red text-xs space-y-1">
+                            <div key={idx} className={`p-2.5 rounded bg-white/5 ${lang === "ar" ? "border-r-2" : "border-l-2"} border-cyber-red text-xs space-y-1`}>
                               <p className="text-gray-200 font-medium">{alert}</p>
                               <p className="text-[9px] text-gray-500 font-mono">Server ID: {activeServer.id}</p>
                             </div>
@@ -386,7 +395,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               className="flex items-center gap-2 px-4 py-1.5 rounded-lg border border-red-500/30 bg-red-950/20 text-red-400 hover:bg-red-950/40 font-mono text-xs tracking-wider transition-all duration-300 animate-pulse hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] cursor-pointer"
             >
               <Lock className="h-3.5 w-3.5" />
-              <span>EMERGENCY LOCKDOWN</span>
+              <span>{t("emergencyLockdown")}</span>
             </button>
           </div>
         </header>
@@ -415,16 +424,16 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold tracking-widest text-red-500 font-mono text-glow-red">SYSTEM LOCKDOWN</h1>
+                <h1 className="text-2xl font-bold tracking-widest text-red-500 font-mono text-glow-red">{t("systemLockdownTitle")}</h1>
                 <p className="text-sm text-gray-400">
-                  Manual safety override engaged. All active tunnels for **{activeServer.name}** have been frozen.
+                  {t("systemLockdownDesc")} (**{activeServer.name}**)
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">
-                    Enter Operator Override PIN
+                    {t("enterPin")}
                   </label>
                   <input
                     type="password"
@@ -437,7 +446,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     } outline-none transition-all`}
                   />
                   {passcodeError && (
-                    <p className="text-[11px] text-red-500 font-mono mt-1">INVALID BYPASS KEY CODE</p>
+                    <p className="text-[11px] text-red-500 font-mono mt-1">{t("invalidPin")}</p>
                   )}
                 </div>
 
@@ -447,13 +456,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)] cursor-pointer"
                   >
                     <Unlock className="h-4 w-4" />
-                    <span>DEACTIVATE SHEATH</span>
+                    <span>{t("deactivateSheath")}</span>
                   </button>
                 </div>
               </div>
 
               <div className="text-[10px] text-gray-600 font-mono">
-                DEFAULT SYSTEM RECOVERY PIN: <span className="text-red-500/60">0000</span> OR <span className="text-red-500/60">1337</span>
+                {t("defaultPinMsg")}
               </div>
             </div>
           </motion.div>
@@ -462,3 +471,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     </div>
   );
 }
+
+export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <DashboardShellContent>{children}</DashboardShellContent>
+    </LanguageProvider>
+  );
+}
+
