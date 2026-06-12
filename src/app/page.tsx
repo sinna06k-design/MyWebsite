@@ -23,25 +23,7 @@ const initialStats = {
 export default function LandingPage() {
   const router = useRouter();
   
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const hash = window.location.hash;
-      const params = new URLSearchParams(hash.substring(1));
-      const token = params.get("access_token");
-      if (token) {
-        localStorage.setItem("discord_token", token);
-        router.push("/servers");
-      }
-
-      // Check query params for bot invite redirect (guild_id)
-      const queryParams = new URLSearchParams(window.location.search);
-      const invitedGuildId = queryParams.get("guild_id");
-      if (invitedGuildId) {
-        localStorage.setItem(`bot_active_${invitedGuildId}`, "true");
-        router.push("/servers");
-      }
-    }
-  }, []);
+  // Discord redirect listener removed
 
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [stats, setStats] = useState(initialStats);

@@ -21,7 +21,7 @@ export default function TwoFactorPage() {
     setTimeout(() => {
       // Allow any 6-digit code or specific code to proceed
       if (code.length === 6) {
-        router.push("/servers");
+        router.push("/dashboard");
       } else {
         setError("Invalid token structure. Code must contain exactly 6 digits.");
         setLoading(false);

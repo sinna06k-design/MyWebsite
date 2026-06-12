@@ -5,26 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Shield, Terminal, MessageSquare, Sliders, BrainCircuit, 
-  FileCode, Activity, Cpu, Plus, Users, Lock, Unlock, 
-  AlertTriangle, Bell, Menu, X, RadioTower, ChevronDown, CheckCircle
+  FileCode, Activity, Cpu, Users, Lock, Unlock, 
+  AlertTriangle, Bell, Menu, X, RadioTower, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LanguageProvider, useLanguage } from "@/lib/language-context";
-
-interface DiscordServer {
-  id: string;
-  name: string;
-  icon: string;
-  members: number;
-  active: boolean;
-  role?: string;
-}
-
-const mockServers: DiscordServer[] = [
-  { id: "srv-1", name: "Nexus Esports", icon: "NE", members: 12891, active: true },
-  { id: "srv-2", name: "Gamer Alliance", icon: "GA", members: 45290, active: true },
-  { id: "srv-4", name: "Global Elite Club", icon: "GE", members: 8920, active: true }
-];
 
 function DashboardShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -64,10 +49,6 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
     tickets: true
   });
 
-  // Read active server from query param or local storage
-  const [servers, setServers] = useState<DiscordServer[]>(mockServers);
-  const [activeServer, setActiveServer] = useState<DiscordServer>(mockServers[0]);
-
   // Set system alerts translated
   useEffect(() => {
     if (lang === "ar") {
@@ -88,36 +69,7 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const isLocked = localStorage.getItem("system-lockdown") === "true";
     setLockdownActive(isLocked);
-
-    let currentList = mockServers;
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user_servers");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed && parsed.length > 0) {
-            setServers(parsed);
-            currentList = parsed;
-            setActiveServer(parsed[0]);
-          }
-        } catch (e) {
-          console.error("Error loading user servers:", e);
-        }
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const serverParam = params.get("server");
-      if (serverParam) {
-        const match = currentList.find(s => s.id === serverParam);
-        if (match) setActiveServer(match);
-      }
-    }
   }, [pathname]);
-
-  const handleServerSwitch = (server: DiscordServer) => {
-    setActiveServer(server);
-    router.push(`${pathname}?server=${server.id}`);
-  };
 
   const handleLockdown = () => {
     localStorage.setItem("system-lockdown", "true");
@@ -143,7 +95,6 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
     e.stopPropagation();
     setModuleStatuses(prev => {
       const updated = !prev[id];
-      // Display a tiny float alert
       const statusText = updated ? (lang === "ar" ? "تفعيل" : "Enabled") : (lang === "ar" ? "تعطيل" : "Disabled");
       const alertMsg = `${name} : ${statusText}`;
       setSystemAlerts(prevAlerts => [alertMsg, ...prevAlerts]);
@@ -177,17 +128,16 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
   ];
 
   const dirAttr = lang === "ar" ? "rtl" : "ltr";
+  const activeServerName = lang === "ar" ? "شركه الحراميه العالميه" : "Nexus Esports";
 
   const renderNavItem = (item: { name: string; href: string; icon: any; id: string; premium?: boolean }) => {
-    const querySuffix = `?server=${activeServer.id}`;
-    // Precise active check
     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
     const isModuleEnabled = moduleStatuses[item.id];
 
     return (
       <li key={item.id}>
         <Link
-          href={`${item.href}${querySuffix}`}
+          href={item.href}
           className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all duration-200 group border border-transparent ${
             isActive 
               ? "bg-[#2f3136] text-white font-medium shadow-sm" 
@@ -204,7 +154,6 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Green Checkmark status trigger (Except Overview and Command pages without toggle logic) */}
           {item.id !== "overview" && item.id !== "serverSettings" && (
             <button
               onClick={(e) => toggleModuleStatus(e, item.id, item.name)}
@@ -230,169 +179,105 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
       {/* BACKGROUND GRID */}
       <div className="absolute inset-0 cyber-grid-bg opacity-5 pointer-events-none" />
       
-      {/* DUAL SIDEBAR SYSTEM */}
-      <aside className={`fixed md:sticky top-0 z-40 h-screen w-80 bg-[#1e2029] border-r border-white/5 flex transition-transform duration-300 ${
+      {/* SINGLE COLUMN SIDEBAR (ProBot Style) */}
+      <aside className={`fixed md:sticky top-0 z-40 h-screen w-64 bg-[#1e2029] border-r border-[#14151b] flex flex-col transition-transform duration-300 ${
         lang === "ar" 
           ? mobileMenuOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
           : mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       } ${lang === "ar" ? "right-0 md:left-auto" : "left-0"}`}>
         
-        {/* COLUMN 1: DISCORD GUILD BUBBLE BAR (Extreme Left) */}
-        <div className="w-16 md:w-18 bg-[#090a0f] border-r border-white/5 flex flex-col items-center py-6 gap-4 select-none shrink-0">
-          <Link 
-            href="/servers"
-            className="relative p-2.5 rounded-xl bg-cyan-950/40 border border-cyber-blue/30 text-cyber-blue hover:text-white hover:border-white transition-all shadow-[0_0_10px_rgba(6,182,212,0.1)] group cursor-pointer"
-          >
-            <Cpu className="h-5 w-5" />
-            <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} px-2 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50`}>
-              {t("hubConsole")}
-            </span>
-          </Link>
-
-          <div className="w-8 border-t border-white/5 my-1" />
-
-          {/* Server bubbles */}
-          <div className="flex-1 w-full flex flex-col items-center gap-3 overflow-y-auto">
-            {servers.map((server) => {
-              const isSelected = activeServer.id === server.id;
-              return (
-                <div key={server.id} className="relative group w-full flex justify-center">
-                  <span className={`absolute ${lang === "ar" ? "right-0" : "left-0"} top-1/2 -translate-y-1/2 w-1 bg-cyber-blue rounded transition-all duration-300 ${
-                    isSelected ? "h-8" : "h-0 group-hover:h-3"
-                  }`} />
-                  
-                  <button
-                    onClick={() => handleServerSwitch(server)}
-                    className={`h-11 w-11 font-bold font-mono text-xs flex items-center justify-center transition-all duration-300 border cursor-pointer overflow-hidden ${
-                      isSelected 
-                        ? "bg-cyan-950/30 border-cyber-blue text-cyber-blue rounded-xl shadow-[0_0_12px_rgba(6,182,212,0.2)]" 
-                        : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-cyan-950/20 hover:border-cyber-blue/30 rounded-full hover:rounded-xl"
-                    }`}
-                  >
-                    {server.icon.startsWith("http") ? (
-                      <img src={server.icon} alt={server.name} className="h-full w-full object-cover" />
-                    ) : (
-                      server.icon
-                    )}
-                  </button>
-
-                  <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50`}>
-                    {server.name}
-                  </span>
-                </div>
-              );
-            })}
-
-            <Link
-              href="/servers"
-              className="h-11 w-11 rounded-full hover:rounded-xl bg-white/5 border border-white/5 hover:border-cyber-purple/40 hover:bg-purple-950/15 text-gray-400 hover:text-cyber-purple flex items-center justify-center transition-all group cursor-pointer"
-            >
-              <Plus className="h-5 w-5" />
-              <span className={`absolute ${lang === "ar" ? "right-full mr-3" : "left-full ml-3"} px-2.5 py-1 bg-black border border-white/10 rounded font-mono text-[9px] text-white font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50`}>
-                {t("addBotServer")}
-              </span>
-            </Link>
-          </div>
-
-          <div className="text-[9px] font-mono text-gray-600 tracking-tighter">v4.0</div>
+        {/* Active Server Badge Header */}
+        <div className="p-4 border-b border-[#14151b] bg-[#1a1c24] flex flex-col justify-center min-h-[72px]">
+          <p className="text-[10px] text-cyber-blue font-mono font-bold tracking-wider uppercase">{t("activeNode")}</p>
+          <h2 className="font-bold text-sm text-white truncate font-mono">{activeServerName}</h2>
         </div>
 
-        {/* COLUMN 2: CATEGORIZED MODULE LIST */}
-        <div className="flex-1 flex flex-col min-w-0">
+        {/* Navigation link elements (ProBot Layout Style) */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
           
-          {/* Active Server Badge Header */}
-          <div className="p-4 border-b border-[#14151b] bg-[#1a1c24] flex flex-col justify-center min-h-[72px]">
-            <p className="text-[10px] text-cyber-blue font-mono font-bold tracking-wider uppercase">{t("activeNode")}</p>
-            <h2 className="font-bold text-sm text-white truncate font-mono">{activeServer.name}</h2>
+          {/* GENERAL Category */}
+          <div>
+            <button 
+              onClick={() => setSectionsOpen(prev => ({ ...prev, general: !prev.general }))}
+              className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
+            >
+              <span>{t("catGeneralMenu")}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.general ? "" : "-rotate-90"}`} />
+            </button>
+            
+            <AnimatePresence initial={false}>
+              {sectionsOpen.general && (
+                <motion.ul 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-0.5 overflow-hidden"
+                >
+                  {generalItems.map(renderNavItem)}
+                </motion.ul>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Navigation link elements (ProBot Layout Style) */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-            
-            {/* GENERAL Category */}
-            <div>
-              <button 
-                onClick={() => setSectionsOpen(prev => ({ ...prev, general: !prev.general }))}
-                className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
-              >
-                <span>{t("catGeneral")}</span>
-                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.general ? "" : "-rotate-90"}`} />
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sectionsOpen.general && (
-                  <motion.ul 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="space-y-0.5 overflow-hidden"
-                  >
-                    {generalItems.map(renderNavItem)}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
+          {/* MODERATION Category */}
+          <div>
+            <button 
+              onClick={() => setSectionsOpen(prev => ({ ...prev, moderation: !prev.moderation }))}
+              className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
+            >
+              <span>{t("catModerationMenu")}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.moderation ? "" : "-rotate-90"}`} />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {sectionsOpen.moderation && (
+                <motion.ul 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-0.5 overflow-hidden"
+                >
+                  {moderationItems.map(renderNavItem)}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* MODULE SETTINGS Category */}
+          <div>
+            <button 
+              onClick={() => setSectionsOpen(prev => ({ ...prev, modules: !prev.modules }))}
+              className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
+            >
+              <span>{t("catModuleSettingsMenu")}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.modules ? "" : "-rotate-90"}`} />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {sectionsOpen.modules && (
+                <motion.ul 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-0.5 overflow-hidden"
+                >
+                  {moduleItems.map(renderNavItem)}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
+
+        </nav>
+
+        {/* User badge */}
+        <div className="p-3 border-t border-white/5 bg-[#14151b] text-xs font-mono">
+          <div className="flex items-center gap-2.5">
+            <div className="relative h-8 w-8 rounded-full border border-white/10 bg-cyan-950/20 flex items-center justify-center font-bold text-cyber-blue">
+              OP
             </div>
-
-            {/* MODERATION Category */}
-            <div>
-              <button 
-                onClick={() => setSectionsOpen(prev => ({ ...prev, moderation: !prev.moderation }))}
-                className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
-              >
-                <span>{t("catModeration")}</span>
-                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.moderation ? "" : "-rotate-90"}`} />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {sectionsOpen.moderation && (
-                  <motion.ul 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="space-y-0.5 overflow-hidden"
-                  >
-                    {moderationItems.map(renderNavItem)}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* MODULE SETTINGS Category */}
-            <div>
-              <button 
-                onClick={() => setSectionsOpen(prev => ({ ...prev, modules: !prev.modules }))}
-                className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 py-1 font-mono hover:text-white transition-colors cursor-pointer"
-              >
-                <span>{t("catModuleSettings")}</span>
-                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${sectionsOpen.modules ? "" : "-rotate-90"}`} />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {sectionsOpen.modules && (
-                  <motion.ul 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="space-y-0.5 overflow-hidden"
-                  >
-                    {moduleItems.map(renderNavItem)}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </div>
-
-          </nav>
-
-          {/* User badge */}
-          <div className="p-3 border-t border-white/5 bg-[#14151b] text-xs font-mono">
-            <div className="flex items-center gap-2.5">
-              <div className="relative h-8 w-8 rounded-full border border-white/10 bg-cyan-950/20 flex items-center justify-center font-bold text-cyber-blue">
-                OP
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-white truncate">Operator#0001</p>
-                <p className="text-[9px] text-gray-500">{t("operatorLevel")}</p>
-              </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-white truncate">Operator#0001</p>
+              <p className="text-[9px] text-gray-500">{t("operatorLevel")}</p>
             </div>
           </div>
         </div>
@@ -428,14 +313,14 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* MAIN VIEWPORT */}
-      <div className={`flex-1 flex flex-col min-h-screen relative z-10 overflow-x-hidden ${lang === "ar" ? "md:mr-80" : "md:ml-0"}`}>
+      <div className="flex-1 flex flex-col min-h-screen relative z-10 overflow-x-hidden">
         
         {/* DESKTOP HEADER */}
         <header className="hidden md:flex h-16 border-b border-white/5 bg-[#14151b]/80 backdrop-blur-md px-8 items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 bg-emerald-950/25 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] text-emerald-400 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span className="uppercase">{activeServer.name} {t("shieldActive")}</span>
+              <span className="uppercase">{activeServerName} {t("shieldActive")}</span>
             </div>
             
             <div className="flex items-center gap-2 bg-cyan-950/25 border border-cyan-500/20 px-3 py-1 rounded-full text-[10px] text-cyber-blue font-mono">
@@ -486,12 +371,11 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
                       </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                         {systemAlerts.length === 0 ? (
-                          <p className="text-xs text-gray-500 text-center py-4">{t("noEvents")} {activeServer.name}.</p>
+                          <p className="text-xs text-gray-500 text-center py-4">{t("noEvents")} {activeServerName}.</p>
                         ) : (
                           systemAlerts.map((alert, idx) => (
                             <div key={idx} className={`p-2.5 rounded bg-white/5 ${lang === "ar" ? "border-r-2" : "border-l-2"} border-cyber-red text-xs space-y-1`}>
                               <p className="text-gray-200 font-medium">{alert}</p>
-                              <p className="text-[9px] text-gray-500 font-mono">Server ID: {activeServer.id}</p>
                             </div>
                           ))
                         )}
@@ -538,7 +422,7 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold tracking-widest text-red-500 font-mono text-glow-red">{t("systemLockdownTitle")}</h1>
                 <p className="text-sm text-gray-400">
-                  {t("systemLockdownDesc")} (**{activeServer.name}**)
+                  {t("systemLockdownDesc")} (**{activeServerName}**)
                 </p>
               </div>
 

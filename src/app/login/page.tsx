@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,23 +24,13 @@ export default function LoginPage() {
     // Simulated credential check
     setTimeout(() => {
       if (email && password) {
-        // Successful mock sign-in, redirect to 2FA page
+        // Redirect to 2FA verification page
         router.push("/two-factor");
       } else {
         setError("Please enter a valid operator email and passcode.");
         setLoading(false);
       }
     }, 1200);
-  };
-
-  const handleDiscordLogin = () => {
-    setOauthLoading(true);
-    if (typeof window !== "undefined") {
-      const clientId = "1344630137152471113";
-      const redirectUri = encodeURIComponent(window.location.origin + "/");
-      const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=identify+email+guilds+guilds.join`;
-      window.location.href = discordAuthUrl;
-    }
   };
 
   return (
@@ -124,7 +113,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || oauthLoading}
+            disabled={loading}
             className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800 text-white font-mono text-xs font-semibold tracking-widest rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.2)]"
           >
             {loading ? "ESTABLISHING..." : (
@@ -134,21 +123,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-white/5"></div>
-          <span className="flex-shrink mx-4 text-[10px] font-mono text-gray-600 uppercase tracking-widest">Alternate Gateway</span>
-          <div className="flex-grow border-t border-white/5"></div>
-        </div>
-
-        {/* Discord OAuth */}
-        <button
-          onClick={handleDiscordLogin}
-          disabled={loading || oauthLoading}
-          className="w-full py-3 border border-indigo-500/30 bg-indigo-950/20 hover:bg-indigo-950/40 text-indigo-400 font-mono text-xs font-semibold tracking-widest rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
-        >
-          {oauthLoading ? "LINKING OAUTH2..." : "DISCORD SECURE LOGIN"}
-        </button>
 
         <div className="text-center pt-2">
           <span className="text-xs text-gray-500 font-mono">NEW OPERATOR? </span>
